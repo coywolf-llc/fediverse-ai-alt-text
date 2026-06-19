@@ -55,45 +55,53 @@ CHOOSE YOUR MODEL
 You'll need an Anthropic API key from console.anthropic.com. Open source and
 MIT licensed.
 
-## Permission justifications
+## Chrome Web Store form — Permission justifications
 
-Chrome Web Store review requires a justification for each requested permission.
+These map 1:1 to the fields in the Web Store submission form (each ≤ 1,000 chars).
 
-**storage**
-Used to save the user's Anthropic API key and preferences (selected model,
-editable pricing table, list of approved Mastodon instances, and a running
-session-cost total) locally on the user's device. No data is transmitted to the
-developer.
+**storage justification**
+The "storage" permission persists the user's own settings on their device via chrome.storage.local: their Anthropic API key, the selected Claude model, an editable per-million-token pricing table used for local cost estimates, the list of Mastodon instance domains they have enabled, and a running session-cost total. This data never leaves the device — it is not sent to the developer or any third party — and is stored so the user does not have to re-enter their key and preferences each session. chrome.storage.sync is intentionally not used, so the API key is never replicated off-device.
 
-**scripting**
-Used to dynamically register the content script on the specific Mastodon
-instance domains the user adds on the options page, so the alt-text button
-appears in that site's composer. The extension does not inject scripts into any
-site the user has not explicitly approved.
+**scripting justification**
+The "scripting" permission is used with chrome.scripting.registerContentScripts to inject the content script only on the specific Mastodon instance domains the user explicitly adds and approves on the options page. The content script detects the image alt-text (description) dialog and adds a "Generate with Claude" button that fills the description field. Scripts are never injected into a site the user has not approved. Registering dynamically per instance — rather than declaring broad static content_scripts — keeps host access to the minimum the user opts into, because Mastodon instances live on arbitrary, user-chosen domains.
 
-**Optional host permissions (the user's Mastodon instance domains)**
-Requested per-instance, only when the user adds a domain on the options page.
-Required so the content script can detect the description modal and inject the
-"Generate with Claude" button on that Mastodon site. No instance is accessed
-until the user grants permission for it.
+**Host permission justification**
+Two host permissions are declared:
+(1) https://api.anthropic.com/* (required): the background service worker calls Anthropic's Claude API at this endpoint to generate the image's alt text and to validate the user's API key. This is the only server the extension contacts.
+(2) https://*/* (optional_host_permissions — NOT granted at install): Mastodon is decentralized and runs on arbitrary, user-chosen domains, including self-hosted instances, so the exact hosts cannot be known in advance. The extension requests access to one instance origin at a time, only after the user adds that instance on the options page and accepts Chrome's per-site permission prompt, then registers the content script for that single origin. The broad pattern is never used to read or act on sites automatically — host access is granted per-instance by the user.
 
-**Host permission: https://api.anthropic.com/**
-Required so the background service worker can send the selected image and prompt
-to Anthropic's Claude API to generate the alt text (and to validate the user's
-API key). This is the only external destination the extension contacts.
+**Are you using remote code? → No.**
+All scripts are bundled in the package (background.js, content.js, and options.js loaded via a local `<script src="options.js">`). There is no eval(), no Function constructor, no importScripts, no external `<script>` tags, and no remotely-loaded modules or Wasm. The extension's only network calls are fetch() requests to the Anthropic REST API that return JSON data (the generated description) — data, not executable code.
 
 ## Single purpose
 
 The extension has one purpose: to generate alternative text for images in the
 Mastodon web composer using the user's own Anthropic Claude API key.
 
-## Data usage disclosures
+## Chrome Web Store form — Data usage
 
-- Does the extension collect user data? Only the user's own API key and
-  settings, stored locally on the device; nothing is sent to the developer.
-- Is data sold to third parties? No.
-- Is data used for purposes unrelated to the single purpose? No.
-- Is data used for creditworthiness / lending? No.
+Note: the Web Store counts "collect" as transmitting data off the device,
+including to a third party (here, Anthropic) — not only to the developer. The
+developer collects nothing, but the user's image is sent to Anthropic, which
+must be disclosed.
 
-Image data is sent only to Anthropic (api.anthropic.com) to generate the
-requested description, at the user's explicit action.
+What user data is collected (checkboxes):
+- [x] **Website content** — the user's image is transmitted to api.anthropic.com
+  to be described (Chrome's example for this category includes "images").
+- [ ] All other categories — Personally identifiable information, Health,
+  Financial and payment, Personal communications, Location, Web history, User
+  activity — are not collected.
+- Judgment call — **Authentication information** (the user's API key): left
+  unchecked. The key is the user's own credential, supplied by them, stored only
+  in chrome.storage.local, and transmitted only to the one service it
+  authenticates (Anthropic) for the user's own requests — never profiled or
+  shared. Checking it is the more conservative alternative if preferred.
+
+Certifications (all true — must check all three):
+- [x] I do not sell or transfer user data to third parties, outside of the
+  approved use cases. (Sending the image to Anthropic to fulfill the
+  user-requested feature is the approved "providing the service" use case.)
+- [x] I do not use or transfer user data for purposes unrelated to the item's
+  single purpose.
+- [x] I do not use or transfer user data to determine creditworthiness or for
+  lending purposes.
