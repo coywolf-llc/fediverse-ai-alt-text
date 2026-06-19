@@ -16,7 +16,10 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.join(__dirname, '..', 'icons');
 
-const INDIGO = [79, 70, 229]; // #4F46E5
+// Official Mastodon brand palette.
+const BLURPLE = [99, 100, 255]; // #6364FF (Pantone 2715 C)
+const PURPLE = [86, 58, 204]; //   #563ACC (Pantone 2725 C)
+const DEEP = [47, 12, 122]; //     #2F0C7A (Pantone 2685 C)
 const WHITE = [255, 255, 255];
 
 // ---- PNG encoding -----------------------------------------------------------
@@ -100,6 +103,28 @@ function fillRoundedRect(c, x0, y0, w, h, radius, color) {
   }
 }
 
+function lerp(a, b, t) {
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * t),
+    Math.round(a[1] + (b[1] - a[1]) * t),
+    Math.round(a[2] + (b[2] - a[2]) * t),
+  ];
+}
+
+function fillRoundedRectVGradient(c, x0, y0, w, h, radius, top, bottom) {
+  const x1 = x0 + w;
+  const y1 = y0 + h;
+  for (let y = Math.floor(y0); y < Math.ceil(y1); y++) {
+    const t = h > 1 ? Math.max(0, Math.min(1, (y - y0) / (h - 1))) : 0;
+    const color = lerp(top, bottom, t);
+    for (let x = Math.floor(x0); x < Math.ceil(x1); x++) {
+      const dx = x < x0 + radius ? x0 + radius - x : x > x1 - radius ? x - (x1 - radius) : 0;
+      const dy = y < y0 + radius ? y0 + radius - y : y > y1 - radius ? y - (y1 - radius) : 0;
+      if (dx * dx + dy * dy <= radius * radius) c.set(x, y, color);
+    }
+  }
+}
+
 function fillDiamond(c, cx, cy, ax, ay, color) {
   for (let y = Math.floor(cy - ay); y <= Math.ceil(cy + ay); y++) {
     for (let x = Math.floor(cx - ax); x <= Math.ceil(cx + ax); x++) {
@@ -164,22 +189,22 @@ function renderIcon(size) {
   const S = size * scale;
   const c = makeCanvas(S);
 
-  // Background rounded square
-  fillRoundedRect(c, 0, 0, S, S, S * 0.22, INDIGO);
+  // Background rounded square — Mastodon blurple → purple vertical gradient.
+  fillRoundedRectVGradient(c, 0, 0, S, S, S * 0.22, BLURPLE, PURPLE);
 
   // Speech bubble body
   fillRoundedRect(c, S * 0.18, S * 0.2, S * 0.64, S * 0.46, S * 0.1, WHITE);
   // Tail
   fillTriangle(c, [S * 0.3, S * 0.62], [S * 0.3, S * 0.82], [S * 0.48, S * 0.62], WHITE);
 
-  // Primary AI sparkle (4-point star = two crossed diamonds)
+  // Primary AI sparkle (4-point star = two crossed diamonds), deep purple.
   const cx = S * 0.5, cy = S * 0.43;
-  fillDiamond(c, cx, cy, S * 0.07, S * 0.19, INDIGO);
-  fillDiamond(c, cx, cy, S * 0.19, S * 0.07, INDIGO);
+  fillDiamond(c, cx, cy, S * 0.07, S * 0.19, DEEP);
+  fillDiamond(c, cx, cy, S * 0.19, S * 0.07, DEEP);
   // Small secondary sparkle
   const sx = S * 0.66, sy = S * 0.3;
-  fillDiamond(c, sx, sy, S * 0.035, S * 0.09, INDIGO);
-  fillDiamond(c, sx, sy, S * 0.09, S * 0.035, INDIGO);
+  fillDiamond(c, sx, sy, S * 0.035, S * 0.09, DEEP);
+  fillDiamond(c, sx, sy, S * 0.09, S * 0.035, DEEP);
 
   return downsample(c, scale, size);
 }
