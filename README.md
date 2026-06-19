@@ -6,9 +6,9 @@ extension can send the image to Anthropic's Claude API — **using your own API
 key** — and autofill a concise, screen-reader-friendly description that follows
 established alt-text accessibility best practices.
 
-- **Accessibility best practices built in.** Claude is prompted with the
-  principles from W3C WAI image guidance and Mark Wyner's alt-text work, so the
-  output is written for real assistive-technology users (see
+- **Accessibility best practices built in.** Claude is prompted with established
+  alt-text best practices (aligned with W3C WAI image guidance), so the output is
+  written for real assistive-technology users (see
   [Accessibility-first descriptions](#accessibility-first-descriptions)).
 - **Bring-your-own-key.** You enter your own Anthropic API key. There is no
   developer key anywhere in the code.
@@ -33,10 +33,9 @@ established alt-text accessibility best practices.
 
 The generated text is written for people who rely on it — screen-reader and
 braille-display users, and anyone who sees alt text when an image fails to load —
-not for search engines. The prompt encodes alt-text best practices synthesized
-from [W3C WAI image guidance](https://www.w3.org/WAI/tutorials/images/) and Mark
-Wyner's talk *"Alt Text is the Ocean You Thought Was a Pond."* Specifically,
-Claude is instructed to:
+not for search engines. The prompt encodes widely recognized alt-text best
+practices, aligned with [W3C WAI image guidance](https://www.w3.org/WAI/tutorials/images/).
+Specifically, Claude is instructed to:
 
 - **Classify the image first** and describe accordingly — a functional image (a
   control or icon) by its function, a text-bearing image by transcribing its text

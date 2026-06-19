@@ -39,9 +39,9 @@ COST TRANSPARENCY
   it current with Anthropic's rates.
 
 ACCESSIBILITY BEST PRACTICES BUILT IN
-• Claude is prompted with established alt-text principles — from W3C WAI image
-  guidance and Mark Wyner's accessibility work — so descriptions are written for
-  screen-reader and braille-display users, not for search engines. It classifies
+• Claude is prompted with established alt-text principles — aligned with W3C WAI
+  image guidance — so descriptions are written for screen-reader and
+  braille-display users, not for search engines. It classifies
   the image, front-loads the key information, transcribes any visible text
   verbatim, expands abbreviations, skips "image of…" lead-ins, and never invents
   details. You review and edit before posting.

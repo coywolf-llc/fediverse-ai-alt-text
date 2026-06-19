@@ -16,9 +16,9 @@ const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
 const ALT_TEXT_MAX_TOKENS = 300;
 
 // Instruction for the model. Returns only the description text.
-// Accessibility principles synthesized from Mark Wyner's "Alt Text is the Ocean
-// You Thought Was a Pond" and W3C WAI image guidance — limited to the parts that
-// apply to a single alt-text field.
+// Accessibility principles aligned with established alt-text best practices
+// (e.g. W3C WAI image guidance) — limited to the parts that apply to a single
+// alt-text field.
 const ALT_PROMPT = `You write alternative text (alt text) for one image a person is attaching to a Mastodon post. It will be read aloud by screen readers, rendered character-by-character on refreshable braille displays, and shown if the image fails to load. Write for those readers — never for search engines or keywords.
 
 Return ONLY the description text: no preamble, no surrounding quotation marks, no labels, and no commentary.

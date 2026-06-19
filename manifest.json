@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AI Alt Text for Mastodon",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Generate image alt text in Mastodon using your own Claude API key, following accessibility best practices. Privacy-first.",
   "icons": {
     "16": "icons/icon-16.png",
