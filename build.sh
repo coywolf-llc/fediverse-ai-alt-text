@@ -3,13 +3,13 @@
 # Build a clean, Chrome-Web-Store-ready zip containing only the runtime files.
 # Version is read from manifest.json so the artifact is versioned.
 #
-# Usage: ./build.sh   ->   dist/alt-text-ai-for-mastodon-<version>.zip
+# Usage: ./build.sh   ->   dist/fediverse-ai-alt-text-<version>.zip
 
 set -euo pipefail
 
 cd "$(dirname "$0")"
 
-NAME="alt-text-ai-for-mastodon"
+NAME="fediverse-ai-alt-text"
 
 # Read "version": "x.y.z" from manifest.json without extra dependencies.
 VERSION="$(grep -m1 '"version"' manifest.json | sed -E 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')"

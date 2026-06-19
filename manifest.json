@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "AI Alt Text for Mastodon",
-  "version": "1.0.4",
-  "description": "Generate image alt text in Mastodon using your own Claude API key, following accessibility best practices. Privacy-first.",
+  "name": "AI Alt Text for the Fediverse",
+  "version": "1.1.0",
+  "description": "Generate alt text for Mastodon & Bluesky with your own Claude API key. Accessibility best practices, privacy-first.",
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
@@ -15,7 +15,7 @@
     "service_worker": "src/background.js"
   },
   "action": {
-    "default_title": "AI Alt Text for Mastodon — Settings",
+    "default_title": "AI Alt Text for the Fediverse — Settings",
     "default_icon": {
       "16": "icons/icon-16.png",
       "48": "icons/icon-48.png",

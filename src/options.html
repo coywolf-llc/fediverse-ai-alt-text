@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI Alt Text for Mastodon — Settings</title>
+    <title>AI Alt Text for the Fediverse — Settings</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="atc-options">
@@ -11,8 +11,8 @@
       <header class="atc-header">
         <img src="../icons/icon-48.png" alt="" width="40" height="40" />
         <div>
-          <h1>AI Alt Text for Mastodon</h1>
-          <p class="atc-subtitle">Generate image alt text with your own Claude API key. Nothing is sent anywhere except api.anthropic.com.</p>
+          <h1>AI Alt Text for the Fediverse</h1>
+          <p class="atc-subtitle">Generate image alt text for Mastodon &amp; Bluesky with your own Claude API key. Nothing is sent anywhere except api.anthropic.com.</p>
         </div>
       </header>
 
@@ -97,13 +97,27 @@
         <button type="button" id="resetSession" class="atc-btn atc-btn--quiet">Reset session total</button>
       </section>
 
-      <!-- Instances -->
+      <!-- Where it runs -->
       <section class="atc-card">
-        <h2>Mastodon instances</h2>
+        <h2>Where it runs</h2>
         <p class="atc-help">
-          Works on any Mastodon instance — add the domain of each one you use, including self-hosted ones
-          (e.g. <code>mastodon.social</code>, <code>henshaw.social</code>, <code>coywolf.social</code>). Your
-          browser will ask permission to run on that site; the button only appears there.
+          Enable the networks you use. Your browser asks permission per-site, and the button only appears
+          where you've approved it. After enabling a site, reload its tab once.
+        </p>
+
+        <h3 class="atc-subhead">Bluesky</h3>
+        <ul class="atc-list" id="builtinList">
+          <li class="atc-list__item">
+            <span>Bluesky <span class="atc-help--small">(bsky.app)</span></span>
+            <button type="button" id="toggleBluesky" class="atc-btn atc-btn--primary">Enable</button>
+          </li>
+        </ul>
+        <p id="builtinStatus" class="atc-statusline" role="status" aria-live="polite"></p>
+
+        <h3 class="atc-subhead">Mastodon instances</h3>
+        <p class="atc-help">
+          Works on any Mastodon instance, including self-hosted ones
+          (e.g. <code>mastodon.social</code>, <code>henshaw.social</code>, <code>coywolf.social</code>).
         </p>
         <div class="atc-row">
           <input type="text" id="instanceInput" class="atc-input" placeholder="mastodon.social" aria-label="Mastodon instance domain" autocomplete="off" spellcheck="false" />

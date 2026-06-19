@@ -1,8 +1,12 @@
-// Content script injected into the user's configured Mastodon instance(s).
+// Content script injected into the sites the user has approved (Mastodon
+// instances and Bluesky).
 //
 // Watches for the image description (alt-text) modal mounting, injects a
 // "Generate with Claude" button, sends the preview image to the background
 // worker, and autofills the React-controlled textarea with the result.
+//
+// Detection is structural (role / aria-modal + a textarea + an image preview),
+// so it is not tied to any one platform's markup.
 //
 // It never talks to the network itself — all API traffic goes through the
 // background service worker.
@@ -130,13 +134,16 @@
       widgets.push({ container, textarea, img });
     };
 
-    // Primary: the alt-text modal (role="dialog").
-    document.querySelectorAll('[role="dialog"]').forEach(consider);
+    // Primary: the alt-text modal (Mastodon uses role="dialog"; Bluesky and
+    // other React apps often use aria-modal).
+    document.querySelectorAll('[role="dialog"], [aria-modal="true"]').forEach(consider);
     // Fallback: an inline editor that pairs a preview image with a textarea.
     if (!widgets.length) {
       document.querySelectorAll('textarea').forEach((ta) => {
         if (ta.getAttribute(BTN_FLAG)) return;
-        const container = ta.closest('form, .modal-root__modal, [class*="modal"], [class*="upload"]') || ta.parentElement;
+        const container =
+          ta.closest('form, [role="dialog"], [aria-modal="true"], [class*="modal"], [class*="composer"], [class*="upload"]') ||
+          ta.parentElement;
         consider(container);
       });
     }
@@ -160,9 +167,10 @@
       .join(' ')
       .toLowerCase();
     if (/describ|description|alt text|alternative text|caption/.test(hints)) return true;
-    // Inside a dialog that also has an image preview, a textarea is very likely
+    // Inside a modal that also has an image preview, a textarea is very likely
     // the description field even without a recognizable label.
-    return !!container.closest('[role="dialog"]') || !!container.matches('[role="dialog"]');
+    const MODAL = '[role="dialog"], [aria-modal="true"]';
+    return !!container.closest(MODAL) || !!container.matches(MODAL);
   }
 
   // ---- Button + UI ----------------------------------------------------------

@@ -2,11 +2,11 @@
 
 ## Store title
 
-AI Alt Text for Mastodon
+AI Alt Text for the Fediverse
 
 ## Summary (≤ 132 chars)
 
-Generate accessible, best-practice image alt text in the Mastodon composer with your own Claude API key. Privacy-first.
+Generate accessible, best-practice alt text for Mastodon & Bluesky with your own Claude API key. Privacy-first.
 
 ## Category
 
@@ -14,11 +14,15 @@ Accessibility / Social & Communication
 
 ## Full description
 
-Make your Mastodon posts more accessible. This extension adds a
+Make your social posts more accessible. This extension adds a
 "Generate with Claude" button to the image description (alt-text) field in the
-Mastodon web composer. Click it, and your image is sent to Anthropic's Claude
-API — using your own API key — to produce a concise, screen-reader-friendly
-description that's filled in for you. Review and edit before you post.
+Mastodon and Bluesky web composers. Click it, and your image is sent to
+Anthropic's Claude API — using your own API key — to produce a concise,
+screen-reader-friendly description that's filled in for you. Review and edit
+before you post.
+
+Supported networks: Mastodon (any instance, including self-hosted) and Bluesky
+(bsky.app).
 
 PRIVACY FIRST, BRING YOUR OWN KEY
 • You use your own Anthropic API key. There is no developer key in the code.
@@ -30,8 +34,8 @@ PRIVACY FIRST, BRING YOUR OWN KEY
   only to generate a description (or to validate your key).
 
 MINIMAL PERMISSIONS
-• It runs only on the Mastodon instances you explicitly add, granting host
-  access per-instance from the options page.
+• It runs only on the networks you explicitly enable (Mastodon instances and
+  Bluesky), granting host access per-site from the options page.
 
 COST TRANSPARENCY
 • See a per-image cost estimate before you generate and the exact cost
@@ -59,21 +63,21 @@ Chrome Web Store review requires a justification for each requested permission.
 
 **storage**
 Used to save the user's Anthropic API key and preferences (selected model,
-editable pricing table, list of approved Mastodon instances, and a running
-session-cost total) locally on the user's device. No data is transmitted to the
-developer.
+editable pricing table, the list of enabled sites — Mastodon instances and
+Bluesky — and a running session-cost total) locally on the user's device. No
+data is transmitted to the developer.
 
 **scripting**
-Used to dynamically register the content script on the specific Mastodon
-instance domains the user adds on the options page, so the alt-text button
-appears in that site's composer. The extension does not inject scripts into any
-site the user has not explicitly approved.
+Used to dynamically register the content script on the specific sites the user
+enables on the options page (Mastodon instances and Bluesky), so the alt-text
+button appears in that site's composer. The extension does not inject scripts
+into any site the user has not explicitly approved.
 
-**Optional host permissions (the user's Mastodon instance domains)**
-Requested per-instance, only when the user adds a domain on the options page.
-Required so the content script can detect the description modal and inject the
-"Generate with Claude" button on that Mastodon site. No instance is accessed
-until the user grants permission for it.
+**Optional host permissions (the sites the user enables)**
+Requested per-site, only when the user enables a network on the options page
+(Bluesky's `bsky.app`, or a Mastodon instance domain). Required so the content
+script can detect the description field and inject the "Generate with Claude"
+button on that site. No site is accessed until the user grants permission for it.
 
 **Host permission: https://api.anthropic.com/**
 Required so the background service worker can send the selected image and prompt
@@ -82,8 +86,9 @@ API key). This is the only external destination the extension contacts.
 
 ## Single purpose
 
-The extension has one purpose: to generate alternative text for images in the
-Mastodon web composer using the user's own Anthropic Claude API key.
+The extension has one purpose: to generate alternative text for images in
+social media web composers (Mastodon and Bluesky) using the user's own Anthropic
+Claude API key.
 
 ## Data usage disclosures
 

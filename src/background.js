@@ -2,10 +2,10 @@
 //
 // Responsibilities:
 //   - Make all network requests to the Anthropic API (keeps the API key out of
-//     the Mastodon page context and avoids page CSP / CORS issues).
+//     the host page context and avoids page CSP / CORS issues).
 //   - Validate the user's API key with a minimal real request.
-//   - Register/unregister the content script per Mastodon instance as the user
-//     grants/revokes host permissions.
+//   - Register/unregister the content script per approved site (Mastodon
+//     instances and Bluesky) as the user grants/revokes host permissions.
 //
 // The ONLY external network destination in this extension is
 // https://api.anthropic.com. There is no telemetry, analytics, or remote config.
@@ -19,7 +19,7 @@ const ALT_TEXT_MAX_TOKENS = 300;
 // Accessibility principles aligned with established alt-text best practices
 // (e.g. W3C WAI image guidance) — limited to the parts that apply to a single
 // alt-text field.
-const ALT_PROMPT = `You write alternative text (alt text) for one image a person is attaching to a Mastodon post. It will be read aloud by screen readers, rendered character-by-character on refreshable braille displays, and shown if the image fails to load. Write for those readers — never for search engines or keywords.
+const ALT_PROMPT = `You write alternative text (alt text) for one image a person is attaching to a social media post. It will be read aloud by screen readers, rendered character-by-character on refreshable braille displays, and shown if the image fails to load. Write for those readers — never for search engines or keywords.
 
 Return ONLY the description text: no preamble, no surrounding quotation marks, no labels, and no commentary.
 

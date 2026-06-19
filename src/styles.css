@@ -1,8 +1,8 @@
-/* Styles for "AI Alt Text for Mastodon".
+/* Styles for "AI Alt Text for the Fediverse".
  *
  * Two scopes share this file:
- *   1. Content-script UI injected into the Mastodon page (.atc-wrap etc).
- *      All selectors are prefixed `atc-` to avoid colliding with Mastodon.
+ *   1. Content-script UI injected into the host page (Mastodon / Bluesky).
+ *      All selectors are prefixed `atc-` to avoid colliding with the host site.
  *   2. The extension options page (.atc-options).
  */
 
@@ -47,7 +47,7 @@
   box-shadow: 0 0 0 4px #4f46e5;
 }
 
-/* Inherit Mastodon's themed text color so it stays readable on light or dark. */
+/* Inherit the host site's text color so it stays readable on light or dark. */
 .atc-status {
   font-size: 12px;
   color: inherit;
@@ -109,6 +109,13 @@
 .atc-card h2 {
   margin: 0 0 10px;
   font-size: 16px;
+}
+
+.atc-subhead {
+  margin: 18px 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
 }
 
 .atc-help {
