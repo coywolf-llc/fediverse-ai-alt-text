@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Alt Text for Mastodon — Settings</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="atc-options">
+    <main class="atc-page">
+      <header class="atc-header">
+        <img src="../icons/icon-48.png" alt="" width="40" height="40" />
+        <div>
+          <h1>AI Alt Text for Mastodon</h1>
+          <p class="atc-subtitle">Generate image alt text with your own Claude API key. Nothing is sent anywhere except api.anthropic.com.</p>
+        </div>
+      </header>
+
+      <!-- API key -->
+      <section class="atc-card">
+        <h2>Anthropic API key</h2>
+        <p class="atc-help">
+          Your key is stored only on this device (<code>chrome.storage.local</code>) and is sent only to api.anthropic.com.
+          Get a key at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.
+        </p>
+        <div class="atc-row">
+          <input type="password" id="apiKey" class="atc-input" placeholder="sk-ant-…" autocomplete="off" spellcheck="false" />
+          <label class="atc-checkbox"><input type="checkbox" id="showKey" /> Show</label>
+        </div>
+        <div class="atc-row">
+          <button id="saveKey" class="atc-btn atc-btn--primary">Save &amp; validate</button>
+          <button id="validateKey" class="atc-btn">Validate key</button>
+          <button id="clearKey" class="atc-btn atc-btn--quiet">Clear</button>
+        </div>
+        <p id="keyStatus" class="atc-statusline"></p>
+        <p class="atc-help atc-help--small">Validating costs a few input tokens — well under a thousandth of a cent.</p>
+      </section>
+
+      <!-- Model -->
+      <section class="atc-card">
+        <h2>Model</h2>
+        <div class="atc-row atc-row--stack">
+          <label class="atc-radio">
+            <input type="radio" name="model" value="claude-haiku-4-5-20251001" />
+            <span><strong>Claude Haiku 4.5</strong> — fastest and cheapest (recommended)</span>
+          </label>
+          <label class="atc-radio">
+            <input type="radio" name="model" value="claude-sonnet-4-6" />
+            <span><strong>Claude Sonnet 4.6</strong> — higher quality, costs more</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Pricing -->
+      <section class="atc-card">
+        <h2>Pricing &amp; cost estimates</h2>
+        <p class="atc-help">
+          Per million tokens. Used only to estimate cost locally — edit if Anthropic changes its rates.
+          <span class="atc-help--small">Rates as of <span id="pricingAsOf">—</span>.</span>
+        </p>
+        <table class="atc-table">
+          <thead>
+            <tr><th>Model</th><th>Input $/MTok</th><th>Output $/MTok</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Claude Haiku 4.5</td>
+              <td><input type="number" step="0.01" min="0" id="haikuInput" class="atc-num" /></td>
+              <td><input type="number" step="0.01" min="0" id="haikuOutput" class="atc-num" /></td>
+            </tr>
+            <tr>
+              <td>Claude Sonnet 4.6</td>
+              <td><input type="number" step="0.01" min="0" id="sonnetInput" class="atc-num" /></td>
+              <td><input type="number" step="0.01" min="0" id="sonnetOutput" class="atc-num" /></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="atc-row">
+          <button id="savePricing" class="atc-btn">Save pricing</button>
+          <button id="resetPricing" class="atc-btn atc-btn--quiet">Reset to defaults</button>
+        </div>
+        <p id="pricingStatus" class="atc-statusline"></p>
+      </section>
+
+      <!-- Session cost -->
+      <section class="atc-card">
+        <h2>This session</h2>
+        <p class="atc-bignum"><span id="sessionCost">$0.00000</span> <span class="atc-help--small">across <span id="sessionCount">0</span> image(s)</span></p>
+        <p class="atc-help">Running total since the browser started. Stored locally, never transmitted.</p>
+        <button id="resetSession" class="atc-btn atc-btn--quiet">Reset session total</button>
+      </section>
+
+      <!-- Instances -->
+      <section class="atc-card">
+        <h2>Mastodon instances</h2>
+        <p class="atc-help">
+          Add the domain of each Mastodon instance you use (e.g. <code>mastodon.social</code>). Your browser will ask
+          permission to run on that site; the button only appears there.
+        </p>
+        <div class="atc-row">
+          <input type="text" id="instanceInput" class="atc-input" placeholder="mastodon.social" autocomplete="off" spellcheck="false" />
+          <button id="addInstance" class="atc-btn atc-btn--primary">Add instance</button>
+        </div>
+        <p id="instanceStatus" class="atc-statusline"></p>
+        <ul id="instanceList" class="atc-list"></ul>
+      </section>
+
+      <footer class="atc-footer">
+        <p>Privacy-first &amp; bring-your-own-key. No analytics, no telemetry, no developer key. By Coywolf LLC · MIT licensed.</p>
+      </footer>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

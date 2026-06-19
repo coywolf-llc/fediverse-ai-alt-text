@@ -1,0 +1,9 @@
+# Build output
+dist/
+
+# OS / editor cruft
+.DS_Store
+*.log
+
+# Node (only if you add tooling later)
+node_modules/
