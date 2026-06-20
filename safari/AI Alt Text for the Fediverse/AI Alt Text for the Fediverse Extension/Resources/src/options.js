@@ -57,6 +57,14 @@ function selectedModel() {
 // ---- Load & render ----------------------------------------------------------
 
 async function init() {
+  if (navigator.vendor === 'Apple Computer, Inc.') {
+    $('instanceHelp').innerHTML =
+      'Works on any Mastodon instance — add the domain of each one you use, including self-hosted ones' +
+      ' (e.g. <code>mastodon.social</code>, <code>henshaw.social</code>, <code>coywolf.social</code>).' +
+      ' In Safari, grant access in <strong>Safari&nbsp;→&nbsp;Settings&nbsp;→&nbsp;Extensions&nbsp;→&nbsp;AI&nbsp;Alt&nbsp;Text&nbsp;for&nbsp;the&nbsp;Fediverse</strong>' +
+      ' and set "Allow on" to the sites you use (or "All&nbsp;Websites"). Then reload the Mastodon tab.';
+  }
+
   const data = await chrome.storage.local.get([
     'apiKey',
     'model',

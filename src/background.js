@@ -204,14 +204,19 @@ async function reconcileContentScripts() {
   // Register content scripts for newly granted instances.
   const toRegister = desired
     .filter((domain) => !existingIds.has(scriptIdForDomain(domain)))
-    .map((domain) => ({
-      id: scriptIdForDomain(domain),
-      matches: [matchPatternForDomain(domain)],
-      js: ['src/content.js'],
-      css: ['src/styles.css'],
-      runAt: 'document_idle',
-      persistAcrossSessions: true,
-    }));
+    .map((domain) => {
+      const entry = {
+        id: scriptIdForDomain(domain),
+        matches: [matchPatternForDomain(domain)],
+        js: ['src/content.js'],
+        css: ['src/styles.css'],
+        runAt: 'document_idle',
+      };
+      // persistAcrossSessions is Chrome-only; omit it in Safari to avoid an
+      // unknown-property error that would silently swallow the registration.
+      if (!isSafari) entry.persistAcrossSessions = true;
+      return entry;
+    });
   if (toRegister.length) {
     try {
       await chrome.scripting.registerContentScripts(toRegister);
