@@ -1,0 +1,132 @@
+name: Release on PR merge
+
+# After a PR merges to main (or via a manual run):
+# 1. If a GitHub Release already exists for the version in manifest.json,
+#    auto-bump the patch version and push it back to main.
+# 2. Build the extension with build.sh and publish a GitHub Release tagged
+#    "vX.Y.Z" with the Chrome-Web-Store-ready zip attached, so you can download
+#    it from the repo's Releases section and upload it to the Web Store.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+  workflow_dispatch: # lets you cut a release manually (e.g. the first one)
+
+permissions:
+  contents: write
+
+env:
+  # Run the bundled JS actions on the Node 24 runtime instead of the deprecated
+  # Node 20 (GitHub default 2026-06-16).
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  release:
+    # Run on a manual dispatch, or when a PR is actually merged (not just closed).
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Decide whether to bump or release at the current version
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # manifest.json is the source of truth for the version we ship.
+          CURR=$(node -p "require('./manifest.json').version")
+          echo "curr=$CURR" >> "$GITHUB_OUTPUT"
+
+          # If a release for the current version already exists, the merged PR
+          # didn't bump the version itself — auto-bump the patch. Otherwise the
+          # version is new, so release at it as-is.
+          if gh release view "v$CURR" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release v$CURR already exists; will auto-bump the patch."
+            echo "needs_bump=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No release for v$CURR yet; releasing at the current version."
+            echo "needs_bump=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Bump patch version and push to main
+        if: steps.check.outputs.needs_bump == 'true'
+        id: bump
+        env:
+          CURR: ${{ steps.check.outputs.curr }}
+        run: |
+          set -euo pipefail
+          IFS='.' read -r MAJ MIN PAT <<< "$CURR"
+          NEW="${MAJ:-0}.${MIN:-0}.$(( ${PAT:-0} + 1 ))"
+          echo "new=$NEW" >> "$GITHUB_OUTPUT"
+          echo "Bumping $CURR -> $NEW"
+
+          node -e "const f='manifest.json',j=require('./'+f);j.version='$NEW';require('fs').writeFileSync(f,JSON.stringify(j,null,2)+'\n')"
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          git commit -m "chore(release): bump version to $NEW"
+          git push origin main
+
+      - name: Resolve release version
+        id: final
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.check.outputs.needs_bump }}" = "true" ]; then
+            V="${{ steps.bump.outputs.new }}"
+          else
+            V="${{ steps.check.outputs.curr }}"
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "tag=v$V" >> "$GITHUB_OUTPUT"
+
+      - name: Build the Web Store zip
+        id: pkg
+        env:
+          VERSION: ${{ steps.final.outputs.version }}
+        run: |
+          set -euo pipefail
+          bash build.sh
+          ZIP="dist/fediverse-ai-alt-text-$VERSION.zip"
+          test -f "$ZIP"
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
+          echo "Packaged $ZIP:"
+          unzip -l "$ZIP"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.final.outputs.tag }}
+          ZIP: ${{ steps.pkg.outputs.zip }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; skipping."
+            exit 0
+          fi
+          if [ -n "${PR_NUMBER:-}" ]; then
+            NOTES="Built from #$PR_NUMBER — $PR_TITLE"
+          else
+            NOTES="Manual release $TAG"
+          fi
+          gh release create "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$TAG" \
+            --notes "$NOTES" \
+            --target "$(git rev-parse HEAD)" \
+            "$ZIP"

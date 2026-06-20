@@ -136,6 +136,12 @@ This reads the version from `manifest.json` and produces
 `dist/fediverse-ai-alt-text-<version>.zip` containing only the runtime files
 (`manifest.json`, `src/`, `icons/`) — no docs, build scripts, or dev tooling.
 
+**Or just grab it from Releases:** every PR merged to `main` automatically
+publishes a [GitHub Release](https://github.com/coywolf-llc/fediverse-ai-alt-text/releases)
+with a versioned, ready-to-upload zip (the patch version auto-bumps when the
+merged PR didn't change it). See
+[`.github/workflows/release.yml`](.github/workflows/release.yml).
+
 ## Project layout
 
 ```
