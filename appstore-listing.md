@@ -3,11 +3,9 @@
 Ready-to-paste copy for App Store Connect. The macOS app hosts the Safari
 extension. Bundle ID `com.coywolf.AIAltTextForTheFediverse`.
 
-> ⚠️ **Two blockers to resolve before submitting (see bottom):**
-> 1. The repo is PRIVATE, so the support + privacy URLs must point to a PUBLIC
->    page (not the GitHub repo). Need public URLs hosted somewhere (coywolf.com).
-> 2. App Review must be able to test a bring-your-own-key feature — include a
->    temporary Anthropic API key in the review notes.
+> ⚠️ **One blocker before submitting (see bottom):** App Review must be able to
+> test a bring-your-own-key feature — include a temporary Anthropic API key in
+> the review notes. (Support + privacy URLs are resolved — the repo is now public.)
 
 ## App information
 - **Name** (≤30): `AI Alt Text for the Fediverse`  (29 chars — fits)
@@ -49,9 +47,9 @@ You'll need an Anthropic API key from console.anthropic.com. Open source and MIT
 mastodon,accessibility,a11y,screen reader,claude,anthropic,ai,image description,wcag,blind,low vision
 
 ## URLs
-- **Support URL**: ⚠️ needs a PUBLIC page (repo is private) — e.g. a coywolf.com page
+- **Support URL**: https://github.com/coywolf-llc/fediverse-ai-alt-text
 - **Marketing URL** (optional): https://coywolf.com
-- **Privacy Policy URL**: ⚠️ needs a PUBLIC page — host the PRIVACY.md text at a public URL
+- **Privacy Policy URL**: https://github.com/coywolf-llc/fediverse-ai-alt-text/blob/main/PRIVACY.md
 
 ## App Privacy (nutrition label)
 The developer (Coywolf) collects nothing, but the app sends the user's image to a
@@ -91,10 +89,9 @@ stores the key only locally, and sends nothing to the developer.
 3. The extension's settings: API key field, model choice, cost estimate.
 4. (Optional) The per-image cost estimate / running session total.
 
-## Pre-submission blockers (resolve first)
-1. **Public support + privacy URLs.** The App Store requires both to be publicly
-   reachable; the GitHub repo is private. Host the PRIVACY.md text and a short
-   support page on coywolf.com (or another public location) and use those URLs.
+## Pre-submission blockers
+1. ✅ **Public support + privacy URLs.** Resolved — the repo is now public, so the
+   GitHub repo URL (support) and PRIVACY.md URL (privacy) above are reachable.
 2. **Reviewer API key.** Without it, App Review can't exercise the feature and
    will likely reject. Generate a temporary, spend-limited Anthropic key and put
    it in the review notes; revoke after approval.
