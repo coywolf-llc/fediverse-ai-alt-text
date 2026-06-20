@@ -59,10 +59,12 @@ function selectedModel() {
 async function init() {
   if (navigator.vendor === 'Apple Computer, Inc.') {
     $('instanceHelp').innerHTML =
-      'Works on any Mastodon instance — add the domain of each one you use, including self-hosted ones' +
-      ' (e.g. <code>mastodon.social</code>, <code>henshaw.social</code>, <code>coywolf.social</code>).' +
-      ' In Safari, grant access in <strong>Safari&nbsp;→&nbsp;Settings&nbsp;→&nbsp;Extensions&nbsp;→&nbsp;AI&nbsp;Alt&nbsp;Text&nbsp;for&nbsp;the&nbsp;Fediverse</strong>' +
-      ' and set "Allow on" to the sites you use (or "All&nbsp;Websites"). Then reload the Mastodon tab.';
+      'Add each Mastodon instance you use (e.g. <code>mastodon.social</code>, <code>henshaw.social</code>).' +
+      ' Then open that site: Safari shows this extension wants to run there — click the extension button in' +
+      ' the toolbar (or open <strong>Safari&nbsp;→&nbsp;Settings&nbsp;→&nbsp;Websites</strong>) and choose' +
+      ' <strong>Allow</strong> for it. Reload the tab and the Generate button appears in Mastodon’s' +
+      ' “Add alt text” dialog. Tip: set <strong>For other websites</strong> to <strong>Deny</strong> so it' +
+      ' only runs where you allow it.';
   }
 
   const data = await chrome.storage.local.get([

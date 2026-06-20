@@ -1,16 +1,23 @@
 {
   "manifest_version": 3,
   "name": "AI Alt Text for the Fediverse",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Generate image alt text for Mastodon with your own Claude API key. Accessibility best practices, privacy-first.",
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "permissions": ["storage", "scripting"],
-  "host_permissions": ["https://api.anthropic.com/*"],
-  "optional_host_permissions": ["https://*/*"],
+  "permissions": [
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://api.anthropic.com/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*"
+  ],
   "background": {
     "service_worker": "src/background.js"
   },
@@ -22,5 +29,19 @@
       "128": "icons/icon-128.png"
     }
   },
-  "options_page": "src/options.html"
+  "options_page": "src/options.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*/*"
+      ],
+      "js": [
+        "src/content.js"
+      ],
+      "css": [
+        "src/styles.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
 }

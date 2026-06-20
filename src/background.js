@@ -165,21 +165,35 @@ async function hasPermission(domain) {
   }
 }
 
-// Safari manages host access through its own extension settings UI rather than
-// the WebExtension permissions API, so chrome.permissions.contains() always
-// returns false there. Detect Safari to skip the hasPermission() gate and try
-// to register content scripts for all saved domains directly.
+// Safari uses content scripts DECLARED in the manifest (added by the Safari
+// build) rather than dynamic registration, because Safari surfaces its native
+// per-site permission prompt only for declared content scripts. The WebExtension
+// permissions API also behaves differently there, so we branch on Safari.
 const isSafari = typeof navigator !== 'undefined' && navigator.vendor === 'Apple Computer, Inc.';
 
 // Bring registered content scripts in line with the stored instance list and
 // the host permissions actually granted. Safe to call repeatedly.
 async function reconcileContentScripts() {
+  // Safari relies on declared content_scripts; registering dynamically there is
+  // unnecessary and would double-inject alongside the declared script. Clear any
+  // leftovers from earlier versions, then stop.
+  if (isSafari) {
+    try {
+      const existing = await chrome.scripting.getRegisteredContentScripts();
+      const ids = existing.filter((s) => s.id.startsWith('atc-content-')).map((s) => s.id);
+      if (ids.length) await chrome.scripting.unregisterContentScripts({ ids });
+    } catch (e) {
+      /* ignore */
+    }
+    return;
+  }
+
   const { instances } = await chrome.storage.local.get('instances');
   const domains = Array.isArray(instances) ? instances : [];
 
   const desired = [];
   for (const domain of domains) {
-    if (isSafari || await hasPermission(domain)) desired.push(domain);
+    if (await hasPermission(domain)) desired.push(domain);
   }
   const desiredIds = new Set(desired.map(scriptIdForDomain));
 
@@ -204,19 +218,14 @@ async function reconcileContentScripts() {
   // Register content scripts for newly granted instances.
   const toRegister = desired
     .filter((domain) => !existingIds.has(scriptIdForDomain(domain)))
-    .map((domain) => {
-      const entry = {
-        id: scriptIdForDomain(domain),
-        matches: [matchPatternForDomain(domain)],
-        js: ['src/content.js'],
-        css: ['src/styles.css'],
-        runAt: 'document_idle',
-      };
-      // persistAcrossSessions is Chrome-only; omit it in Safari to avoid an
-      // unknown-property error that would silently swallow the registration.
-      if (!isSafari) entry.persistAcrossSessions = true;
-      return entry;
-    });
+    .map((domain) => ({
+      id: scriptIdForDomain(domain),
+      matches: [matchPatternForDomain(domain)],
+      js: ['src/content.js'],
+      css: ['src/styles.css'],
+      runAt: 'document_idle',
+      persistAcrossSessions: true,
+    }));
   if (toRegister.length) {
     try {
       await chrome.scripting.registerContentScripts(toRegister);

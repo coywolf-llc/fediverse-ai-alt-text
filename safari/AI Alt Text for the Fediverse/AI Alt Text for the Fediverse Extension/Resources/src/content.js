@@ -276,9 +276,26 @@
     requestAnimationFrame(scan);
   }
 
-  loadSettings().then(() => {
-    scan();
-    const observer = new MutationObserver(scheduleScan);
-    observer.observe(document.documentElement, { childList: true, subtree: true });
+  async function hostIsConfiguredInstance() {
+    try {
+      const { instances } = await chrome.storage.local.get('instances');
+      const list = Array.isArray(instances) ? instances : [];
+      return list.includes(location.hostname);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // In Chrome the script is only injected on configured instances (dynamic
+  // registration), so this gate always passes. In Safari the script is DECLARED
+  // for every permitted site, so gate on the saved instance list to avoid acting
+  // anywhere the user didn't add. (Add an instance, then reload its tab.)
+  hostIsConfiguredInstance().then((ok) => {
+    if (!ok) return;
+    loadSettings().then(() => {
+      scan();
+      const observer = new MutationObserver(scheduleScan);
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+    });
   });
 })();
