@@ -165,6 +165,12 @@ async function hasPermission(domain) {
   }
 }
 
+// Safari manages host access through its own extension settings UI rather than
+// the WebExtension permissions API, so chrome.permissions.contains() always
+// returns false there. Detect Safari to skip the hasPermission() gate and try
+// to register content scripts for all saved domains directly.
+const isSafari = typeof navigator !== 'undefined' && navigator.vendor === 'Apple Computer, Inc.';
+
 // Bring registered content scripts in line with the stored instance list and
 // the host permissions actually granted. Safe to call repeatedly.
 async function reconcileContentScripts() {
@@ -173,7 +179,7 @@ async function reconcileContentScripts() {
 
   const desired = [];
   for (const domain of domains) {
-    if (await hasPermission(domain)) desired.push(domain);
+    if (isSafari || await hasPermission(domain)) desired.push(domain);
   }
   const desiredIds = new Set(desired.map(scriptIdForDomain));
 
