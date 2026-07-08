@@ -73,13 +73,84 @@ async function getApiKey() {
   return apiKey || '';
 }
 
-// Generate alt text for a base64-encoded image.
-// `detailed` selects the fuller prompt; the default (falsy) is the concise one.
+const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+// An image origin (e.g. https://cdn.masto.host) we still need host permission for. Set when
+// a cross-origin image fetch is blocked; consumed by the next toolbar-icon click, which is a
+// user gesture and so may call permissions.request(). Kept in memory (not storage) so the
+// request is invoked synchronously in the gesture; a rare background restart just falls back
+// to opening options, and the user re-triggers by clicking Generate again.
+let pendingGrantOrigin = null;
+
+// Fetch a cross-origin image URL and return { data (base64), mediaType }. Runs in the
+// background, which — unlike the page/content script — can read a cross-origin response
+// once the extension holds host permission for its origin (the content script requests
+// that permission before sending the URL). Content-Type drives media_type, falling back
+// to the file extension so a webp isn't mislabeled. Chunked base64 avoids blowing the
+// call stack on a large image.
+async function fetchImageAsBase64(url) {
+  const resp = await fetchWithTimeout(url, {}, REQUEST_TIMEOUT_MS);
+  if (!resp.ok) {
+    throw new Error(`HTTP ${resp.status}`);
+  }
+  const blob = await resp.blob();
+  let mediaType = blob.type;
+  if (!SUPPORTED_IMAGE_TYPES.includes(mediaType)) {
+    const ext = ((url.split(/[?#]/)[0].match(/\.(jpe?g|png|gif|webp)$/i) || [])[1] || '').toLowerCase();
+    mediaType = ext ? (ext === 'jpg' ? 'image/jpeg' : `image/${ext}`) : 'image/jpeg';
+  }
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let binary = '';
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+  }
+  return { data: btoa(binary), mediaType };
+}
+
+// Generate alt text for an image, given either base64 `data` + `mediaType` (read by the
+// content script) OR an `imageUrl` to fetch here (a cross-origin preview the page can't
+// read). `detailed` selects the fuller prompt; the default (falsy) is the concise one.
 // Returns { ok: true, text, usage } or { ok: false, error }.
-async function generateAltText({ data, mediaType, model, detailed }) {
+async function generateAltText({ data, mediaType, model, detailed, imageUrl }) {
   const apiKey = await getApiKey();
   if (!apiKey) {
     return { ok: false, error: 'No API key set. Open the extension options to add your Anthropic API key.' };
+  }
+
+  if (!data && imageUrl) {
+    let origin = null;
+    try {
+      origin = new URL(imageUrl).origin;
+    } catch (e) {
+      /* not a parseable URL */
+    }
+    // The background can only read a cross-origin image once the extension holds host
+    // permission for its origin. If we don't yet, remember it and tell the user to grant it
+    // by clicking the toolbar icon — a content script can't request a permission, but the
+    // action-click gesture can (see browser.action.onClicked).
+    if (origin && !(await browser.permissions.contains({ origins: [origin + '/*'] }))) {
+      pendingGrantOrigin = origin;
+      return {
+        ok: false,
+        error: `Click the extension's icon in your browser toolbar to allow images from ${new URL(imageUrl).host}, then Generate again.`,
+      };
+    }
+    try {
+      const fetched = await fetchImageAsBase64(imageUrl);
+      data = fetched.data;
+      mediaType = fetched.mediaType;
+    } catch (e) {
+      return {
+        ok: false,
+        error: e && e.name === 'AbortError'
+          ? 'Fetching the image timed out. Try again.'
+          : "Couldn't fetch the image from its host.",
+      };
+    }
+  }
+  if (!data) {
+    return { ok: false, error: 'No image to describe.' };
   }
 
   const prompt = detailed ? ALT_PROMPT_DETAILED : ALT_PROMPT_CONCISE;
@@ -274,6 +345,15 @@ browser.permissions.onAdded.addListener(() => reconcileContentScripts());
 browser.permissions.onRemoved.addListener(() => reconcileContentScripts());
 
 browser.action.onClicked.addListener(() => {
+  // If a cross-origin image needed host permission, request it now: the toolbar click is a
+  // user gesture, so permissions.request() is allowed here (it isn't from a content script).
+  // Call it SYNCHRONOUSLY — awaiting first would spend the gesture. Otherwise open options.
+  if (pendingGrantOrigin) {
+    const origin = pendingGrantOrigin;
+    pendingGrantOrigin = null;
+    browser.permissions.request({ origins: [origin + '/*'] }).catch(() => {});
+    return;
+  }
   browser.runtime.openOptionsPage();
 });
 
