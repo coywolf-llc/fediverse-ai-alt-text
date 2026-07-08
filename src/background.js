@@ -120,20 +120,25 @@ async function generateAltText({ data, mediaType, model, detailed, imageUrl }) {
 
   if (!data && imageUrl) {
     let origin = null;
+    let host = imageUrl;
     try {
-      origin = new URL(imageUrl).origin;
+      const u = new URL(imageUrl);
+      origin = u.origin;
+      host = u.host;
     } catch (e) {
       /* not a parseable URL */
     }
     // The service worker can only read a cross-origin image once the extension holds host
-    // permission for its origin. If we don't yet, remember it and tell the user to grant it
-    // by clicking the toolbar icon — a content script can't request a permission, but the
-    // action-click gesture can (see chrome.action.onClicked).
-    if (origin && !(await chrome.permissions.contains({ origins: [origin + '/*'] }))) {
+    // permission for its origin. On non-Safari: if we don't hold it, remember the origin and
+    // tell the user to grant it via the toolbar icon — a content script can't request a
+    // permission, but the action-click gesture can (see chrome.action.onClicked). Safari
+    // manages host access through Settings → Websites (its permissions.request returns false
+    // for hosts), so there we skip the gate, just try, and hint at Settings if it's blocked.
+    if (!isSafari && origin && !(await chrome.permissions.contains({ origins: [origin + '/*'] }))) {
       pendingGrantOrigin = origin;
       return {
         ok: false,
-        error: `Click the extension's icon in your browser toolbar to allow images from ${new URL(imageUrl).host}, then Generate again.`,
+        error: `Click the extension's icon in your browser toolbar to allow images from ${host}, then Generate again.`,
       };
     }
     try {
@@ -141,10 +146,13 @@ async function generateAltText({ data, mediaType, model, detailed, imageUrl }) {
       data = fetched.data;
       mediaType = fetched.mediaType;
     } catch (e) {
+      if (e && e.name === 'AbortError') {
+        return { ok: false, error: 'Fetching the image timed out. Try again.' };
+      }
       return {
         ok: false,
-        error: e && e.name === 'AbortError'
-          ? 'Fetching the image timed out. Try again.'
+        error: isSafari
+          ? `Safari is blocking this image (${host}). Allow it in Safari → Settings → Websites, then Generate again.`
           : "Couldn't fetch the image from its host.",
       };
     }

@@ -263,27 +263,8 @@
     button.addEventListener('click', async () => {
       const model = settings.model;
       const detailed = detailedInput.checked;
-      // Re-read the live preview src at click time.
+      // Re-read the live preview at click time.
       const img = pickPreviewImage(widget.container) || widget.img;
-      const src = (img && img.src) || '';
-
-      // A CROSS-ORIGIN http(s) preview (e.g. a media CDN like cdn.masto.host, separate
-      // from the instance) can't be read by the page — it sends no CORS headers, so both
-      // fetch() and a tainted canvas fail. Hand the URL to the background service worker,
-      // which CAN read it once the extension holds host permission for that origin. The
-      // content script can't request that permission itself (chrome.permissions isn't
-      // exposed to content scripts), so the background returns a "grant needed" message
-      // and asks for it on the next toolbar-icon click. Same-origin / blob: / data:
-      // previews are read locally via imageToBase64.
-      let remoteImageUrl = null;
-      if (/^https?:/i.test(src)) {
-        try {
-          const u = new URL(src);
-          if (u.origin !== location.origin) remoteImageUrl = src;
-        } catch (e) {
-          /* unparseable src — fall back to the local read below */
-        }
-      }
 
       button.disabled = true;
       button.setAttribute('aria-busy', 'true');
@@ -292,10 +273,30 @@
       status.classList.remove('atc-status--error');
 
       try {
-        const payload = remoteImageUrl
-          ? { type: 'generate', imageUrl: remoteImageUrl, model, detailed }
-          : { ...(await imageToBase64(img)), type: 'generate', model, detailed };
-        const resp = await chrome.runtime.sendMessage(payload);
+        // Read the image LOCALLY first (blob:, data:, same-origin, or a CORS-enabled host).
+        // Anything the page can read itself needs NO host permission and just works. ONLY
+        // when that fails — a cross-origin media CDN (e.g. cdn.masto.host) that blocks reads
+        // — do we hand the URL to the background, which needs one-time host permission for
+        // that origin (a content script can't request it; the background asks on the next
+        // toolbar-icon click).
+        let local = null;
+        try {
+          local = await imageToBase64(img);
+        } catch (e) {
+          local = null;
+        }
+
+        let resp;
+        if (local && local.data) {
+          resp = await chrome.runtime.sendMessage({ type: 'generate', data: local.data, mediaType: local.mediaType, model, detailed });
+        } else if (img && /^https?:/i.test(img.src)) {
+          resp = await chrome.runtime.sendMessage({ type: 'generate', imageUrl: img.src, model, detailed });
+        } else {
+          console.error('[alt-text] could not read the image preview (no readable source)');
+          status.textContent = 'Could not read the image preview.';
+          status.classList.add('atc-status--error');
+          return;
+        }
 
         if (!resp || !resp.ok) {
           const msg = (resp && resp.error) || 'Something went wrong.';
