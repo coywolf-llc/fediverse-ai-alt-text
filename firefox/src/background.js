@@ -131,9 +131,13 @@ async function generateAltText({ data, mediaType, model, detailed, imageUrl }) {
     // action-click gesture can (see browser.action.onClicked).
     if (origin && !(await browser.permissions.contains({ origins: [origin + '/*'] }))) {
       pendingGrantOrigin = origin;
+      // Flag the toolbar icon so the user knows to click it — the permission prompt can only
+      // be triggered from there. Cleared when they click it (see browser.action.onClicked).
+      browser.action.setBadgeBackgroundColor({ color: '#dc2626' });
+      browser.action.setBadgeText({ text: '!' });
       return {
         ok: false,
-        error: `Click the extension's icon in your browser toolbar to allow images from ${new URL(imageUrl).host}, then Generate again.`,
+        error: `Click the extension's icon (with the red “!”) in your browser toolbar to allow images from ${new URL(imageUrl).host}, then Generate again.`,
       };
     }
     try {
@@ -351,6 +355,7 @@ browser.action.onClicked.addListener(() => {
   if (pendingGrantOrigin) {
     const origin = pendingGrantOrigin;
     pendingGrantOrigin = null;
+    browser.action.setBadgeText({ text: '' });
     browser.permissions.request({ origins: [origin + '/*'] }).catch(() => {});
     return;
   }

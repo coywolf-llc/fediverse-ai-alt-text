@@ -136,9 +136,13 @@ async function generateAltText({ data, mediaType, model, detailed, imageUrl }) {
     // for hosts), so there we skip the gate, just try, and hint at Settings if it's blocked.
     if (!isSafari && origin && !(await chrome.permissions.contains({ origins: [origin + '/*'] }))) {
       pendingGrantOrigin = origin;
+      // Flag the toolbar icon so the user knows to click it — the permission prompt can only
+      // be triggered from there. Cleared when they click it (see chrome.action.onClicked).
+      chrome.action.setBadgeBackgroundColor({ color: '#dc2626' });
+      chrome.action.setBadgeText({ text: '!' });
       return {
         ok: false,
-        error: `Click the extension's icon in your browser toolbar to allow images from ${host}, then Generate again.`,
+        error: `Click the extension's icon (with the red “!”) in your browser toolbar to allow images from ${host}, then Generate again.`,
       };
     }
     try {
@@ -379,6 +383,7 @@ chrome.action.onClicked.addListener(() => {
   if (pendingGrantOrigin) {
     const origin = pendingGrantOrigin;
     pendingGrantOrigin = null;
+    chrome.action.setBadgeText({ text: '' });
     chrome.permissions.request({ origins: [origin + '/*'] }).catch(() => {});
     return;
   }
