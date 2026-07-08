@@ -68,7 +68,38 @@
 
   // ---- Image extraction -----------------------------------------------------
 
+  // Anthropic resizes anything larger to ~this long edge, so cap the canvas to it.
+  const MAX_IMAGE_EDGE = 1568;
+
   async function imageToBase64(imgEl) {
+    // Read the preview from a CANVAS first. The image is already decoded in the page,
+    // so this needs no network request — which avoids the two things that break
+    // fetch(imgEl.src): a blob: URL Mastodon has already revoked after processing the
+    // upload, and a cross-origin media URL without CORS. It also re-encodes to JPEG, so
+    // the source format (webp, avif, …) no longer matters. Falls back to fetch only if
+    // the canvas can't be read (a cross-origin preview taints it) or isn't decoded yet.
+    const w = imgEl.naturalWidth || imgEl.width || 0;
+    const h = imgEl.naturalHeight || imgEl.height || 0;
+    if (w && h) {
+      try {
+        const scale = Math.min(1, MAX_IMAGE_EDGE / Math.max(w, h));
+        const cw = Math.max(1, Math.round(w * scale));
+        const ch = Math.max(1, Math.round(h * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = cw;
+        canvas.height = ch;
+        const ctx = canvas.getContext('2d');
+        // White matte so transparent areas don't turn black when flattened to JPEG.
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, cw, ch);
+        ctx.drawImage(imgEl, 0, 0, cw, ch);
+        const data = canvas.toDataURL('image/jpeg', 0.92).split(',')[1];
+        if (data) return { data, mediaType: 'image/jpeg' };
+      } catch (e) {
+        // Tainted (cross-origin) canvas or a draw failure — fall through to fetch.
+        console.warn('[alt-text] canvas read failed, trying fetch:', e && e.message);
+      }
+    }
     const res = await fetch(imgEl.src);
     const blob = await res.blob();
     const data = await new Promise((resolve, reject) => {
@@ -264,6 +295,7 @@
           status.textContent = 'Description added.';
         }
       } catch (e) {
+        console.error('[alt-text] could not read the image preview:', e);
         status.textContent = 'Could not read the image preview.';
         status.classList.add('atc-status--error');
       } finally {
