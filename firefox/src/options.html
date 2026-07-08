@@ -16,6 +16,23 @@
         </div>
       </header>
 
+      <!-- Mastodon instances -->
+      <section class="atc-card">
+        <h2>Mastodon instances</h2>
+        <p class="atc-help" id="instanceHelp">
+          Works on any Mastodon instance — add the domain of each one you use, including self-hosted ones
+          (e.g. <code>mastodon.social</code>, <code>henshaw.social</code>, <code>coywolf.social</code>). Your
+          browser will ask permission to run on that site; the button only appears there. After adding one,
+          reload its tab once.
+        </p>
+        <div class="atc-row">
+          <input type="text" id="instanceInput" class="atc-input" placeholder="mastodon.social" aria-label="Mastodon instance domain" autocomplete="off" spellcheck="false" />
+          <button type="button" id="addInstance" class="atc-btn atc-btn--primary">Add instance</button>
+        </div>
+        <p id="instanceStatus" class="atc-statusline" role="status" aria-live="polite"></p>
+        <ul id="instanceList" class="atc-list"></ul>
+      </section>
+
       <!-- API key -->
       <section class="atc-card">
         <h2>Anthropic API key</h2>
@@ -95,23 +112,6 @@
         <p class="atc-bignum"><span id="sessionCost">$0.00000</span> <span class="atc-help--small">across <span id="sessionCount">0</span> image(s)</span></p>
         <p class="atc-help">Running total since the browser started. Stored locally, never transmitted.</p>
         <button type="button" id="resetSession" class="atc-btn atc-btn--quiet">Reset session total</button>
-      </section>
-
-      <!-- Mastodon instances -->
-      <section class="atc-card">
-        <h2>Mastodon instances</h2>
-        <p class="atc-help" id="instanceHelp">
-          Works on any Mastodon instance — add the domain of each one you use, including self-hosted ones
-          (e.g. <code>mastodon.social</code>, <code>henshaw.social</code>, <code>coywolf.social</code>). Your
-          browser will ask permission to run on that site; the button only appears there. After adding one,
-          reload its tab once.
-        </p>
-        <div class="atc-row">
-          <input type="text" id="instanceInput" class="atc-input" placeholder="mastodon.social" aria-label="Mastodon instance domain" autocomplete="off" spellcheck="false" />
-          <button type="button" id="addInstance" class="atc-btn atc-btn--primary">Add instance</button>
-        </div>
-        <p id="instanceStatus" class="atc-statusline" role="status" aria-live="polite"></p>
-        <ul id="instanceList" class="atc-list"></ul>
       </section>
 
       <footer class="atc-footer">
