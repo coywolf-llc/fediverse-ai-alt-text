@@ -23,8 +23,9 @@ best practices.
 1. A **content script** runs only on the Mastodon instances you approve. It
    watches for the image description (alt-text) modal — detected by structure
    (`role="dialog"` + a textarea + an image preview), not hashed class names —
-   injects a **"Generate with Claude"** button, reads the preview image, and
-   autofills the description with Claude's reply.
+   injects a **"Generate with Claude"** button (with a **"Detailed"** checkbox
+   beside it), reads the preview image, and autofills the description with
+   Claude's reply.
 2. A **background service worker** makes the actual API calls (keeping your key
    out of the page and avoiding the page's CSP/CORS). It is the only place that
    reads the key and the only thing that contacts `api.anthropic.com`.
@@ -37,7 +38,11 @@ The generated text is written for people who rely on it — screen-reader and
 braille-display users, and anyone who sees alt text when an image fails to load —
 not for search engines. The prompt encodes widely recognized alt-text best
 practices, aligned with [W3C WAI image guidance](https://www.w3.org/WAI/tutorials/images/).
-Specifically, Claude is instructed to:
+**By default the description is concise** — one sentence where possible, two at
+most — front-loading the single most important thing. Tick the **"Detailed"**
+checkbox next to the Generate button for a fuller, image-adaptive description; the
+extension remembers your choice for next time. Both modes follow the same
+accessibility principles — Claude is instructed to:
 
 - **Classify the image first** and describe accordingly — a functional image (a
   control or icon) by its function, a text-bearing image by transcribing its text
@@ -52,8 +57,9 @@ Specifically, Claude is instructed to:
   as an image), but name the medium when it matters ("Screenshot of…").
 - **Use proper typographic quotes** when transcribing text, and **never invent
   details** that aren't visible.
-- **Match depth to the image** — one tight sentence for a simple photo, more when
-  the image is detailed or is itself the point.
+- **Match depth to the image** — the concise default keeps it to one or two
+  sentences; **Detailed** mode gives more when the image is rich or is itself the
+  point (a chart, a quote card), one tight sentence when it's simple.
 
 You always review and edit the result before posting — the extension fills the
 field, you stay in control.

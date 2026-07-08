@@ -47,6 +47,24 @@
   box-shadow: 0 0 0 4px #4f46e5;
 }
 
+/* "Detailed" toggle, sits to the right of the button. Inherits Mastodon's themed
+ * text color so the label stays readable on light or dark instances. */
+.atc-detailed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: inherit;
+  cursor: pointer;
+  user-select: none;
+}
+
+.atc-detailed__input {
+  margin: 0;
+  cursor: pointer;
+  accent-color: #4f46e5;
+}
+
 /* Inherit Mastodon's themed text color so it stays readable on light or dark. */
 .atc-status {
   font-size: 12px;

@@ -28,11 +28,26 @@ function fetchWithTimeout(url, options, timeoutMs) {
   return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
 }
 
-// Instruction for the model. Returns only the description text.
-// Accessibility principles aligned with established alt-text best practices
-// (e.g. W3C WAI image guidance) — limited to the parts that apply to a single
-// alt-text field.
-const ALT_PROMPT = `You write alternative text (alt text) for one image a person is attaching to a Mastodon post. It will be read aloud by screen readers, rendered character-by-character on refreshable braille displays, and shown if the image fails to load. Write for those readers — never for search engines or keywords.
+// Instructions for the model. Two modes, selected per request by the composer's
+// "Detailed" checkbox. Both return ONLY the description text. Accessibility
+// principles align with established alt-text best practices (e.g. W3C WAI image
+// guidance), limited to the parts that apply to a single alt-text field.
+//
+// CONCISE is the DEFAULT (checkbox unchecked): one sentence where possible, two at
+// most. DETAILED (checkbox checked) is the fuller, image-adaptive description.
+
+const ALT_PROMPT_CONCISE = `You write alternative text (alt text) for one image a person is attaching to a Mastodon post. It will be read aloud by screen readers, shown on refreshable braille displays, and displayed if the image fails to load. Write for those readers — never for search engines or keywords.
+
+Return ONLY the description text: no preamble, no surrounding quotation marks, no labels, and no commentary.
+
+Be brief: aim for ONE sentence, and never more than two. Front-load the single most important thing so the first words carry the essential meaning on their own, then stop — include only what a reader needs to understand the image in context, and omit purely decorative detail.
+
+- Write a complete sentence in sentence case with terminal punctuation.
+- Do not begin with "image of", "photo of", "picture of", or "graphic of" — assistive technology already announces it as an image. You MAY name the medium when it matters (e.g. "Screenshot of…").
+- If the image is mostly text (a sign, quote card, meme), give the key visible text briefly, using curly quotation marks and apostrophes (" " ' '); don't describe styling unless it is the point.
+- Describe only what is visible. Never guess at names, places, or wording you cannot see.`;
+
+const ALT_PROMPT_DETAILED = `You write alternative text (alt text) for one image a person is attaching to a Mastodon post. It will be read aloud by screen readers, rendered character-by-character on refreshable braille displays, and shown if the image fails to load. Write for those readers — never for search engines or keywords.
 
 Return ONLY the description text: no preamble, no surrounding quotation marks, no labels, and no commentary.
 
@@ -59,12 +74,15 @@ async function getApiKey() {
 }
 
 // Generate alt text for a base64-encoded image.
+// `detailed` selects the fuller prompt; the default (falsy) is the concise one.
 // Returns { ok: true, text, usage } or { ok: false, error }.
-async function generateAltText({ data, mediaType, model }) {
+async function generateAltText({ data, mediaType, model, detailed }) {
   const apiKey = await getApiKey();
   if (!apiKey) {
     return { ok: false, error: 'No API key set. Open the extension options to add your Anthropic API key.' };
   }
+
+  const prompt = detailed ? ALT_PROMPT_DETAILED : ALT_PROMPT_CONCISE;
 
   let resp;
   try {
@@ -84,7 +102,7 @@ async function generateAltText({ data, mediaType, model }) {
             role: 'user',
             content: [
               { type: 'image', source: { type: 'base64', media_type: mediaType, data } },
-              { type: 'text', text: ALT_PROMPT },
+              { type: 'text', text: prompt },
             ],
           },
         ],

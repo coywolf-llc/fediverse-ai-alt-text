@@ -17,20 +17,25 @@
   };
   const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
   // Rough fixed cost inputs for the pre-call estimate (see README §cost).
-  const PROMPT_TOKENS = 120; // ALT_PROMPT + message overhead
-  const EST_OUTPUT_TOKENS = 70; // ~one short sentence
+  const PROMPT_TOKENS = 120; // prompt + message overhead
+  // Output size differs by mode; the actual cost is shown after the call.
+  const EST_OUTPUT_TOKENS_CONCISE = 55; // ~one short sentence (default)
+  const EST_OUTPUT_TOKENS_DETAILED = 190; // a fuller, multi-clause description
   // Anthropic resizes large images (~1.15 MP / 1568px long edge) before billing,
   // so cap the token estimate to match what you'll actually be charged.
   const MAX_IMAGE_TOKENS = 1600;
 
   // ---- Settings cache -------------------------------------------------------
 
-  let settings = { model: DEFAULT_MODEL, pricing: null };
+  // `detailed` is the persisted state of the composer's "Detailed" checkbox
+  // (default false = concise). Remembered across modals, tabs, and sessions.
+  let settings = { model: DEFAULT_MODEL, pricing: null, detailed: false };
 
   async function loadSettings() {
-    const { model, pricing } = await chrome.storage.local.get(['model', 'pricing']);
+    const { model, pricing, detailed } = await chrome.storage.local.get(['model', 'pricing', 'detailed']);
     settings.model = model || DEFAULT_MODEL;
     settings.pricing = pricing || null;
+    settings.detailed = detailed === true;
   }
 
   function pricingFor(model) {
@@ -47,6 +52,7 @@
     if (area !== 'local') return;
     if (changes.model) settings.model = changes.model.newValue || DEFAULT_MODEL;
     if (changes.pricing) settings.pricing = changes.pricing.newValue || null;
+    if (changes.detailed) settings.detailed = changes.detailed.newValue === true;
   });
 
   // ---- React-controlled textarea autofill -----------------------------------
@@ -81,14 +87,15 @@
     return '$' + n.toFixed(4);
   }
 
-  function preCallEstimate(imgEl, model) {
+  function preCallEstimate(imgEl, model, detailed) {
     const w = imgEl.naturalWidth || imgEl.width || 0;
     const h = imgEl.naturalHeight || imgEl.height || 0;
     const rawTokens = w && h ? Math.round((w * h) / 750) : MAX_IMAGE_TOKENS;
     const imageTokens = Math.min(rawTokens, MAX_IMAGE_TOKENS);
+    const outputTokens = detailed ? EST_OUTPUT_TOKENS_DETAILED : EST_OUTPUT_TOKENS_CONCISE;
     const p = pricingFor(model);
     const cost =
-      ((imageTokens + PROMPT_TOKENS) / 1e6) * p.input + (EST_OUTPUT_TOKENS / 1e6) * p.output;
+      ((imageTokens + PROMPT_TOKENS) / 1e6) * p.input + (outputTokens / 1e6) * p.output;
     return cost;
   }
 
@@ -191,18 +198,40 @@
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
 
+    // "Detailed" toggle, to the right of the button. Unchecked = concise (the new
+    // default); checked = the fuller prompt. The choice is persisted to
+    // storage.local and restored on every modal/tab/session (settings.detailed).
+    const detailedLabel = document.createElement('label');
+    detailedLabel.className = 'atc-detailed';
+    const detailedInput = document.createElement('input');
+    detailedInput.type = 'checkbox';
+    detailedInput.className = 'atc-detailed__input';
+    detailedInput.checked = settings.detailed === true;
+    const detailedText = document.createElement('span');
+    detailedText.textContent = 'Detailed';
+    detailedLabel.append(detailedInput, detailedText);
+
     wrap.appendChild(button);
+    wrap.appendChild(detailedLabel);
     wrap.appendChild(status);
 
     const showEstimate = () => {
-      const est = preCallEstimate(widget.img, settings.model);
+      const est = preCallEstimate(widget.img, settings.model, detailedInput.checked);
       status.textContent = `~${formatUsd(est)} with ${modelLabel(settings.model)}`;
       status.classList.remove('atc-status--error');
     };
     showEstimate();
 
+    // Remember the choice; refresh the estimate to match the selected depth.
+    detailedInput.addEventListener('change', () => {
+      settings.detailed = detailedInput.checked;
+      chrome.storage.local.set({ detailed: detailedInput.checked });
+      if (!button.disabled) showEstimate();
+    });
+
     button.addEventListener('click', async () => {
       const model = settings.model;
+      const detailed = detailedInput.checked;
       button.disabled = true;
       button.setAttribute('aria-busy', 'true');
       label.textContent = 'Generating…';
@@ -213,7 +242,7 @@
         // Re-read the live preview src at click time.
         const img = pickPreviewImage(widget.container) || widget.img;
         const { data, mediaType } = await imageToBase64(img);
-        const resp = await chrome.runtime.sendMessage({ type: 'generate', data, mediaType, model });
+        const resp = await chrome.runtime.sendMessage({ type: 'generate', data, mediaType, model, detailed });
 
         if (!resp || !resp.ok) {
           const msg = (resp && resp.error) || 'Something went wrong.';
