@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AI Alt Text for the Fediverse",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Generate image alt text for Mastodon with your own Claude API key. Accessibility best practices, privacy-first.",
   "icons": {
     "16": "icons/icon-16.png",

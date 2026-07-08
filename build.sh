@@ -3,13 +3,15 @@
 # Build a clean, Chrome-Web-Store-ready zip containing only the runtime files.
 # Version is read from manifest.json so the artifact is versioned.
 #
-# Usage: ./build.sh   ->   dist/fediverse-ai-alt-text-<version>.zip
+# Usage: ./build.sh   ->   dist/ai-alt-text-for-the-fediverse-chrome-<version>.zip
+# Naming matches firefox/build.sh (<name>-<browser>-<version>) so both artifacts sit
+# side by side in dist/ and the browser is unambiguous.
 
 set -euo pipefail
 
 cd "$(dirname "$0")"
 
-NAME="fediverse-ai-alt-text"
+NAME="ai-alt-text-for-the-fediverse"
 
 # Read "version": "x.y.z" from manifest.json without extra dependencies.
 VERSION="$(grep -m1 '"version"' manifest.json | sed -E 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')"
@@ -30,7 +32,7 @@ cp -R icons "$STAGING/"
 find "$STAGING" -name '.DS_Store' -delete
 
 mkdir -p dist
-ZIP="dist/${NAME}-${VERSION}.zip"
+ZIP="dist/${NAME}-chrome-${VERSION}.zip"
 rm -f "$ZIP"
 
 ( cd "$STAGING" && zip -r -X "$OLDPWD/$ZIP" manifest.json src icons >/dev/null )
