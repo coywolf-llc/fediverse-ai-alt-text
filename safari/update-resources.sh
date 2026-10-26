@@ -24,5 +24,21 @@ cp -R src "$DEST/"
 cp -R icons "$DEST/"
 find "$DEST" -name '.DS_Store' -delete
 
+# Keep the Mac App Store version in step with the extension: MARKETING_VERSION
+# (CFBundleShortVersionString) = manifest version. App Store Connect rejects an
+# upload whose version isn't higher than the last approved one, and macOS build
+# numbers (CURRENT_PROJECT_VERSION) must keep increasing, so bump the build
+# whenever the version changes.
+PBX="safari/AI Alt Text for the Fediverse/AI Alt Text for the Fediverse.xcodeproj/project.pbxproj"
+VERSION="$(jq -r .version manifest.json)"
+CURRENT="$(grep -m1 -o 'MARKETING_VERSION = [^;]*' "$PBX" | sed 's/MARKETING_VERSION = //')"
+if [ "$CURRENT" != "$VERSION" ]; then
+  BUILD="$(grep -m1 -o 'CURRENT_PROJECT_VERSION = [0-9]*' "$PBX" | sed 's/CURRENT_PROJECT_VERSION = //')"
+  NEXT=$((BUILD + 1))
+  sed -i '' -e "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = $VERSION;/" \
+    -e "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $NEXT;/" "$PBX"
+  echo "Xcode version $CURRENT -> $VERSION (build $BUILD -> $NEXT)"
+fi
+
 echo "Synced manifest(+declared content_scripts)/src/icons -> $DEST"
 echo "Now rebuild (or re-archive) the app in Xcode."
