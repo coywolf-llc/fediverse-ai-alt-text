@@ -329,6 +329,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   $('addInstance').addEventListener('click', addInstance);
   $('instanceInput').addEventListener('keydown', (e) => {
+    // The Enter that confirms an input-method (CJK) candidate isn't "add";
+    // keyCode 229 covers Safari before 27.
+    if (e.isComposing || e.keyCode === 229) return;
     if (e.key === 'Enter') {
       e.preventDefault();
       addInstance();
